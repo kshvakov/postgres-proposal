@@ -1,0 +1,68 @@
+create type custom_type as (
+    title      text,
+    t_array    text[],
+    i_array    int[]
+);
+
+CREATE TYPE
+
+-- 
+
+create table custom (
+    id          serial,
+    custom_type custom_type,
+    created_at  timestamptz
+);
+
+CREATE TABLE
+
+-- 
+
+insert into custom (custom_type, created_at)
+    values 
+        (('t 1', '{a,b,c}', '{1,2,3}')::custom_type, current_timestamp),
+        (('t 2', '{d,e,f}', '{4,5,6}')::custom_type, current_timestamp),
+        (('t 3', '{g,h,l}', '{7,8,9}')::custom_type, current_timestamp);
+
+INSERT 0 3
+
+--
+
+select to_json(t.*) from (select * from custom where id = 1) t;
+
+                                                             to_json                                                              
+----------------------------------------------------------------------------------------------------------------------------------
+ {"id":1,"custom_type":{"title":"t 1","t_array":["a","b","c"],"i_array":[1,2,3]},"created_at":"2016-04-27T10:47:01.938524+03:00"}
+(1 row)
+
+
+--
+
+select to_json(array_agg(t.*)) from (select * from custom) t;
+
+                                                                                                                                                                                               to_json                                                                                                                                                                                                
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [{"id":1,"custom_type":{"title":"t 1","t_array":["a","b","c"],"i_array":[1,2,3]},"created_at":"2016-04-27T10:47:01.938524+03:00"},{"id":2,"custom_type":{"title":"t 2","t_array":["d","e","f"],"i_array":[4,5,6]},"created_at":"2016-04-27T10:47:01.938524+03:00"},{"id":3,"custom_type":{"title":"t 3","t_array":["g","h","l"],"i_array":[7,8,9]},"created_at":"2016-04-27T10:47:01.938524+03:00"}]
+(1 row)
+
+--
+
+select * from json_populate_record(null::custom, '{"id":1,"custom_type":{"title":"t 1","t_array":["a","b","c"],"i_array":[1,2,3]},"created_at":"2016-04-27T10:47:01.938524+03:00"}');
+
+
+ id |         custom_type         |          created_at           
+----+-----------------------------+-------------------------------
+  1 | ("t 1","{a,b,c}","{1,2,3}") | 2016-04-27 10:47:01.938524+03
+(1 row)
+
+
+--
+
+select * from json_populate_recordset(null::custom, '[{"id":1,"custom_type":{"title":"t 1","t_array":["a","b","c"],"i_array":[1,2,3]},"created_at":"2016-04-27T10:47:01.938524+03:00"},{"id":2,"custom_type":{"title":"t 2","t_array":["d","e","f"],"i_array":[4,5,6]},"created_at":"2016-04-27T10:47:01.938524+03:00"},{"id":3,"custom_type":{"title":"t 3","t_array":["g","h","l"],"i_array":[7,8,9]},"created_at":"2016-04-27T10:47:01.938524+03:00"}]');
+
+ id |         custom_type         |          created_at           
+----+-----------------------------+-------------------------------
+  1 | ("t 1","{a,b,c}","{1,2,3}") | 2016-04-27 10:47:01.938524+03
+  2 | ("t 2","{d,e,f}","{4,5,6}") | 2016-04-27 10:47:01.938524+03
+  3 | ("t 3","{g,h,l}","{7,8,9}") | 2016-04-27 10:47:01.938524+03
+(3 rows)
